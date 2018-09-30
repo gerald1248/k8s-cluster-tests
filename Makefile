@@ -11,3 +11,7 @@ install:
 	kubectl create configmap cluster-tests -n default --from-file=test/
 delete:
 	helm delete --purge k8s-cluster-tests
+test:
+	cd bin; ./k8s-cluster-tests_test
+
+.PHONY: test

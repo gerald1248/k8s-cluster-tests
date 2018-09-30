@@ -31,24 +31,58 @@ test
 
 The `exports` file exports variables such as `USER_PROJECTS` and `NODES`, which can then be used and reused freely in tests.
 
-The test pod has `oc`, `curl`, `jq`, `psql` and so on to examine the cluster from within, with `cluster-reader` access. It mounts the test scripts (stored in a ConfigMap) and runs each one in turn.
+The test pod has `kubectl`, `curl`, `jq`, `psql` and so on to examine the cluster from within, with `cluster-reader` access. It mounts the test scripts (stored in a ConfigMap) and runs each one in turn.
+
+## Install the Helm chart
+```
+$ make install
+helm install --name=k8s-cluster-tests .
+NAME:   k8s-cluster-tests
+LAST DEPLOYED: Sun Sep 30 23:48:08 2018
+NAMESPACE: default
+STATUS: DEPLOYED
+
+RESOURCES:
+==> v1/Deployment
+NAME           AGE
+cluster-tests  0s
+
+==> v1beta1/CronJob
+cluster-tests  0s
+
+==> v1/Pod(related)
+
+NAME                           READY  STATUS             RESTARTS  AGE
+cluster-tests-6976ffd59-gqbzp  0/1    ContainerCreating  0         0s
+
+==> v1/ResourceQuota
+
+NAME           AGE
+cluster-tests  0s
+
+==> v1/LimitRange
+cluster-tests  0s
+
+==> v1/ConfigMap
+cluster-tests  0s
+
+==> v1/ServiceAccount
+cluster-tests  0s
+
+==> v1/ClusterRole
+cluster-reader  0s
+
+==> v1/ClusterRoleBinding
+cluster-tests                 0s
+cluster-tests-cluster-reader  0s
+```
 
 ## Run the tests
 ```
-$ make
-project "cluster-tests" created
-serviceaccount "cluster-tests" created
-cronjob "cluster-tests" created
-rolebinding "system:deployers" created
-deploymentconfig "cluster-tests" created
-clusterrolebinding "cluster-tests" created
-limitrange "cluster-tests" created
-resourcequota "cluster-tests" created
-configmap "cluster-tests" created
-$ oc get po
-NAME                     READY     STATUS    RESTARTS   AGE
-cluster-tests-1-bcp2d   1/1       Running   0          4m 
-$ oc exec cluster-tests-1-bcp2d cluster-tests
+$ kubectl get po
+NAME                        READY     STATUS    RESTARTS   AGE
+k8s-cluster-tests-1-bcp2d   1/1       Running   0          4m 
+$ kubectl exec cluster-tests-1-bcp2d k8s-cluster-tests
 test_project_quotas
 test_nodes_ready
 test_nodes_no_warnings
@@ -62,26 +96,24 @@ OK
 ```
 
 ## Writing your own tests
-To add tests, populate the folder `test` with additional files (each containing one or more Bash functions and an instruction to add them to the test suite). To update the ConfigMap, run:
+To add tests, populate the folder `test` with additional files (each containing one or more Bash functions and an instruction to add them to the test suite).
 ```
 $ make update-configmap
 ```
 This will refresh the configmap from the contents of the `test` folder.
 
 ## Cleanup
-Call `make clean` to remove the project `cluster-tests` and the rolebinding that gives the serviceaccount `cluster-tests` read-only access to all projects.
+To uninstall the Helm chart, enter:
+```
+$ make delete
+helm delete --purge k8s-cluster-tests
+release "k8s-cluster-tests" deleted
+```
 
 ## Building the image
-Run `make build-docker-image` to create a bespoke test runner image. In many cases, the version of the `oc` client should be adjusted from `latest` to a version that matches your cluster.
+Run `make build` to create a bespoke test runner image.
 
-Tag the image as desired and upload to Docker Hub or a private registry as appropriate.
+Tag the image as desired and push to Docker Hub or a private registry as appropriate.
 
 ## Test the test-runner
-Run `make test` to run the tests for the `cluster-tests` executable in the `bin` folder.
-
-## Note on versions
-The default image on Docker Hub ships with the current stable build of the `oc` client. You may wish to adjust the version tag in the `docker-build.sh` script and create an image that matches your cluster exactly.
-
-Kubernetes versions prior to 1.8 offer limited support for CronJob objects (the version attribute has `v2alpha1`). If a process fails, the v2 alpha CronJob will keep spawning containers until a container returns zero. The problem is exacerbated by the fact that the CronJob object in these Kubernetes builds does not recognise the cleanup properties reducing the number of `completed` or `error` pods kept.
-
-To deal with this (and to give users time to catch up), the CronJob always returns zero.
+Run `make test` to run the tests for the `k8s-cluster-tests` executable in the `bin` folder.

@@ -1,27 +1,27 @@
 #!/bin/sh
 
 test_no_params() {
-  export OPENSHIFT_UNIT_DATADIR="" && ${PWD}/openshift-unit >/dev/null 2>&1
+  export K8S_CLUSTER_TESTS_DATADIR="" && ${PWD}/k8s-cluster-tests >/dev/null 2>&1
   assertEquals " call without parameters exit without error;" 0 $?
 }
 
 test_ignore() {
-  export OPENSHIFT_UNIT_DATADIR="${PWD}/test_ignore" && ${PWD}/openshift-unit >/dev/null 2>&1
+  export K8S_CLUSTER_TESTS_DATADIR="${PWD}/test_ignore" && ${PWD}/k8s-cluster-tests >/dev/null 2>&1
   assertEquals " should pass with ignored failure;" 0 $? 
 }
 
 test_failure() {
-  export OPENSHIFT_UNIT_DATADIR="${PWD}/test_failure" && ${PWD}/openshift-unit >/dev/null 2>&1
+  export K8S_CLUSTER_TESTS_DATADIR="${PWD}/test_failure" && ${PWD}/k8s-cluster-tests >/dev/null 2>&1
 	assertNotEquals " should fail;" 0 $?
 }
 
 test_success() {
-  export OPENSHIFT_UNIT_DATADIR="${PWD}/test_success" && ${PWD}/openshift-unit >/dev/null 2>&1
+  export K8S_CLUSTER_TESTS_DATADIR="${PWD}/test_success" && ${PWD}/k8s-cluster-tests >/dev/null 2>&1
 	assertEquals " should succeed;" 0 $?
 }
 
 test_incorrect_datadir() {
-  export OPENSHIFT_UNIT_DATADIR="/non/existent/dir" && ${PWD}/openshift-unit >/dev/null 2>&1
+  export K8S_CLUSTER_TESTS_DATADIR="/non/existent/dir" && ${PWD}/k8s-cluster-tests >/dev/null 2>&1
 	assertEquals " non-existent datadir should not fail;" 0 $?
 }
 
