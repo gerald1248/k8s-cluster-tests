@@ -1,0 +1,29 @@
+#!/bin/bash
+
+suite() {
+  datadir=${K8S_CLUSTER_TESTS_DATADIR}
+  if [ -z "${datadir}" ]; then
+    datadir="/etc/k8s-cluster-tests.d"
+  fi
+
+  # export frequently used queries
+  exports="${datadir}/exports"
+  if [ -f "${exports}" ]; then
+    . "${exports}"
+  fi
+
+  # process scripts, skipping ignored files
+  for testscript in $(find ${datadir}/ -name \*_test -type f); do
+    testscript_basename=$(basename "${testscript}")
+    ignore="${datadir}/ignore"
+    if [ -f "${ignore}" ]; then
+      count=$(grep -c "${testscript_basename}" "${ignore}")
+      if [ "${count}" -ne "0" ]; then
+        continue
+      fi
+    fi
+    . "${testscript}"
+  done
+}
+
+. shunit2

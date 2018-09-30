@@ -1,0 +1,15 @@
+apiVersion: v1
+name: k8s-cluster-tests
+version: 0.1.0
+description: "automated cluster tests"
+icon: "https://docs.helm.sh/src/img/helm-logo.svg"
+keywords:
+  - cluster
+  - tests
+  - automation
+home: https://github.com/gerald1248/k8s-cluster-tests
+sources:
+  - https://github.com/arnehilmann/k8s-cluster-tests
+maintainers:
+  - name: gerald1248
+    email: gerald1248@gmail.com

@@ -1,0 +1,43 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ .Values.name | quote }}
+  namespace: {{ .Values.namespace | quote }}
+  labels:
+    app: {{ .Values.name | quote }}
+spec:
+  schedule: {{ .Values.schedule | quote }}
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountname: {{ .Values.name | quote }}
+          serviceAccount: {{ .Values.name | quote }}
+          containers:
+          -
+            name: {{ .Values.name | quote }}
+            image: gerald1248/k8s-cluster-tests
+            resources:
+              limits:
+                cpu: 200m
+                memory: 1Gi
+              requests:
+                cpu: 100m
+                memory: 512Mi
+            args:
+            - /bin/sh
+            - -c
+            - k8s-cluster-tests || true
+            env:
+            - name: POD_NAMESPACE
+              value: {{ .Values.namespace | quote }}
+            volumeMounts:
+            - name: "{{ .Values.name }}-volume"
+              mountPath: /etc/k8s-cluster-tests.d
+          volumes:
+          - name: "{{ .Values.name }}-volume"
+            configMap:
+              name: {{ .Values.name | quote }}
+          restartPolicy: Never

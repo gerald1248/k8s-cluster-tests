@@ -1,0 +1,3 @@
+name: cluster-tests
+namespace: default
+schedule: "30 0 * * *"

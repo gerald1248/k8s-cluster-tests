@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name | quote }}
+  namespace: {{ .Values.namespace | quote }}
+data:
+  identity_test: |
+    test_identity() {
+      assertEquals " expected identity;" 0 0
+    }
+    suite_addTest test_identity
