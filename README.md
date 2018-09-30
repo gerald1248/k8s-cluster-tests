@@ -1,7 +1,7 @@
 # Kubernetes cluster tests
 
-![Docker Automated](https://img.shields.io/docker/automated/gerald1248/cluster-tests.svg)
-![Docker Build](https://img.shields.io/docker/build/gerald1248/cluster-tests.svg)
+![Docker Automated](https://img.shields.io/docker/automated/gerald1248/k8s-cluster-tests.svg)
+![Docker Build](https://img.shields.io/docker/build/gerald1248/k8s-cluster-tests.svg)
 
 ![Overview of cluster-tests](ditaa/chart.png)
 
