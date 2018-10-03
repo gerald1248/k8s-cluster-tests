@@ -10,7 +10,7 @@ metadata:
     app: {{ .Values.name | quote }}
 roleRef:
   kind: ClusterRole
-  name: view
+  name: system:aggregate-to-view
 subjects:
 -
   kind: ServiceAccount

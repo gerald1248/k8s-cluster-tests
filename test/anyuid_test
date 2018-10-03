@@ -1,8 +1,0 @@
-test_anyuid() {
-  scc_anyuid=`kubectl describe scc anyuid 2>/dev/null`
-  for namespace in ${USER_NAMESPACES}; do
-    count_anyuid_default=`echo ${scc_anyuid} | grep -c "Users:.*system:serviceaccount:${project}:default"`
-    assertEquals " service account default in namespace ${namespace} has SCC anyuid;" 0 ${count_anyuid_default}
-  done
-}
-suite_addTest test_anyuid

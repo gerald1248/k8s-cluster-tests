@@ -7,3 +7,11 @@ rules:
   # add resources as required
   resources: ["nodes"]
   verbs: ["get", "watch", "list"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources:
+  - rolebindings
+  - clusterrolebindings
+  verbs:
+  - get
+  - watch
+  - list

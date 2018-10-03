@@ -1,0 +1,9 @@
+test_root() {
+  for namespace in ${USER_NAMESPACES}; do
+    for pod in `kubectl get po -n ${namespace} --no-headers 2>/dev/null | cut -d' ' -f1`; do
+      count=`kubectl get po -n ${namespace} -o json | jq '.items[].spec | select(.securityContext != "{}" and .securityContext.runAsUser == 0)' | wc -l`
+      assertEquals " pod ${pod} in namespace ${namespace} runs as root;" 0 ${count}
+    done
+  done
+}
+suite_addTest test_root

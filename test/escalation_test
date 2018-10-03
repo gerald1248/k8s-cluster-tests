@@ -1,0 +1,9 @@
+test_escalation() {
+  for namespace in ${USER_NAMESPACES}; do
+    for pod in `kubectl get po -n ${namespace} --no-headers 2>/dev/null | cut -d' ' -f1`; do
+      count=`kubectl get po -n ${namespace} -o json | jq '.items[].spec.containers[] | select(.securityContext != "{}" and .securityContext != null and .securityContext.allowPrivilegeEscalation == true)' | wc -l`
+      assertEquals " pod ${pod} in namespace ${namespace} allows privilege escalation;" 0 ${count}
+    done
+  done
+}
+suite_addTest test_escalation

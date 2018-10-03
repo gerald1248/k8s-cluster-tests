@@ -12,6 +12,7 @@ install:
 delete:
 	helm delete --purge k8s-cluster-tests
 test:
+	./Dockerfile_test
 	cd bin; ./k8s-cluster-tests_test
 
 .PHONY: test

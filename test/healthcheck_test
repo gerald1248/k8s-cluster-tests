@@ -1,0 +1,10 @@
+test_healthcheck() {
+  for namespace in ${USER_NAMESPACES}; do
+    for pod in `kubectl get po --no-headers -n ${namespace} 2>/dev/null | cut -d' ' -f1`; do
+      result=`kubectl get po/${pod} -n ${namespace} -o json | jq '.spec.containers[] | select(.readinessProbe and .livenessProbe)'`
+      assertNotEquals " pod ${pod} in namespace ${namespace} requires both liveness and readiness probes;" 0 ${#result}
+    done
+  done
+}
+
+suite_addTest test_healthcheck
