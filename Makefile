@@ -1,18 +1,21 @@
+NAME = "`jq -r .name values.yaml`"
+NAMESPACE = "`jq -r .namespace values.yaml`"
+
 build:
-	docker build -t k8s-cluster-tests .
+	docker build -t $(NAME) .
 push:
-	docker tag k8s-cluster-tests gerald1248/k8s-cluster-tests:latest
-	docker push gerald1248/k8s-cluster-tests:latest
+	docker tag $(NAME) gerald1248/$(NAME):latest
+	docker push gerald1248/$(NAME):latest
 install:
-	helm install --name=k8s-cluster-tests .
+	helm install --name=$(NAME) .
 	sleep 2
-	kubectl delete configmap cluster-tests
+	kubectl delete configmap $(NAME) -n $(NAMESPACE)
 	sleep 2
-	kubectl create configmap cluster-tests -n default --from-file=test/
+	kubectl create configmap $(NAME) -n $(NAMESPACE) --from-file=test/
 delete:
-	helm delete --purge k8s-cluster-tests
+	helm delete --purge $(NAME)
 test:
 	./Dockerfile_test
-	cd bin; ./k8s-cluster-tests_test
+	cd bin; ./$(NAME)_test
 
 .PHONY: test
