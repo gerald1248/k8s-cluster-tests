@@ -2,9 +2,8 @@ ifeq (, $(shell which jq))
  $(error "Dependency jq not in $(PATH)")
 endif
 
-NAME = "`jq -r .name values.yaml`"
-NAMESPACE = "`jq -r .namespace values.yaml`"
-
+NAME = $(shell jq -r .name values.yaml)
+NAMESPACE = $(shell jq -r .namespace values.yaml)
 
 build:
 	docker build -t $(NAME) .
