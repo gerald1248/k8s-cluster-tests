@@ -9,7 +9,7 @@ keywords:
   - automation
 home: https://github.com/gerald1248/k8s-cluster-tests
 sources:
-  - https://github.com/arnehilmann/k8s-cluster-tests
+  - https://github.com/gerald1248/k8s-cluster-tests
 maintainers:
   - name: gerald1248
     email: gerald1248@gmail.com

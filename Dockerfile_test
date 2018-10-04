@@ -2,7 +2,6 @@
 
 TEST_IMAGE_NAME="k8s-cluster-tests-test"
 TEST_IMAGE_TAG="latest"
-docker build -t "${TEST_IMAGE_NAME}:${TEST_IMAGE_TAG}" .
 
 test_Dockerfile() {
   for PRG in kubectl; do
@@ -19,5 +18,7 @@ for DEPENDENCY in docker shunit2; do
     exit 1
   fi
 done
+
+docker build -t "${TEST_IMAGE_NAME}:${TEST_IMAGE_TAG}" .
 
 . shunit2
