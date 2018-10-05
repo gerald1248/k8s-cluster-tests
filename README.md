@@ -7,31 +7,36 @@
 
 Use `cluster-tests` to test those aspects of your Kubernetes cluster that are not already covered by monitoring and health checks. Run tests periodically with read-only access to all projects.
 
-For example, you could assert that:
+For example, you could assert that pods:
 
-* non-admin users must not be given the role `self-provisioner`
-* service account `default` must not have security context constraint `anyuid` (ideally the rule would apply to all service accounts) 
-* pods in user projects must not run in privileged security context
+* must not run with root privileges
+* must not allow privilege escalation
+* must not run in privileged security context
 * and so on
 
-Admin access is required at the start (to create project and the `cluster-reader` ClusterRoleBinding for the service account), but from then on access is strictly controlled. Logging is handled via `stdout` as usual and easily filtered in Kibana (or similar) by focusing on the chosen namespace.
+Admin access is required at the start (to create project and the ClusterRoleBinding for the service account), but from then on access is strictly controlled. Logging is handled via `stdout` as usual and easily filtered in Kibana (or similar) by focusing on the chosen namespace.
 
 ![Permissions](ditaa/permissions.png)
 
 The default set of tests includes the following:
 ```
 test
-├── anyuid_test
-├── exports
-├── limits_test
+├── cluster_admin_bindings_test
+├── escalation_test
+├── ha_test
+├── healthcheck_test
 ├── nodes_test
 ├── privileged_test
-└── self_provisioner_test
+├── quotas_test
+├── resources_test
+└── root_test
 ```
 
-The `exports` file exports variables such as `USER_PROJECTS` and `NODES`, which can then be used and reused freely in tests.
+The `exports` file exports variables such as `USER_NAMESPACES` and `NODES`, which can then be used and reused freely in tests.
 
-The test pod has `kubectl`, `curl`, `jq`, `psql` and so on to examine the cluster from within, with `cluster-reader` access. It mounts the test scripts (stored in a ConfigMap) and runs each one in turn.
+The test pod has `kubectl`, `jq`, and so on to examine the cluster from within, with read access across namespaces. It mounts the test scripts (stored in a ConfigMap) and runs each one in turn.
+
+A test can also be triggered for a specified set of namespaces (often just one, for use in a pipeline).
 
 ## Install the Helm chart
 ```

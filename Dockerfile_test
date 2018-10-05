@@ -4,7 +4,7 @@ TEST_IMAGE_NAME="k8s-cluster-tests-test"
 TEST_IMAGE_TAG="latest"
 
 test_Dockerfile() {
-  for PRG in kubectl; do
+  for PRG in kubectl k8s-cluster-tests; do
     OUTPUT=$(docker run ${TEST_IMAGE_NAME}:${TEST_IMAGE_TAG} ${PRG} --help)
     assertNotEquals " can't run ${PRG};" "${OUTPUT}" ""
   done

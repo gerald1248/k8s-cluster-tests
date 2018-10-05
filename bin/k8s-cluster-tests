@@ -26,4 +26,8 @@ suite() {
   done
 }
 
+if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+  echo -e "Usage: ./k8s-cluster-tests\nExport:\n  K8S_CLUSTER_TESTS_DATADIR\n  USER_NAMESPACES\n  NODES\n HA_SERVICES\nto select suitable parameters."
+  exit 0
+fi
 . shunit2
