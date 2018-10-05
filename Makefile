@@ -17,10 +17,6 @@ push:
 	docker push gerald1248/$(NAME):latest
 install:
 	helm install --namespace=$(NAMESPACE) --name=$(NAME) .
-	sleep 2
-	kubectl delete configmap $(NAME) -n $(NAMESPACE)
-	sleep 2
-	kubectl create configmap $(NAME) -n $(NAMESPACE) --from-file=test/
 delete:
 	helm delete --purge $(NAME)
 test:

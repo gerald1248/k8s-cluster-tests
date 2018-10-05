@@ -4,8 +4,130 @@ metadata:
   name: {{ .Values.name | quote }}
   namespace: {{ .Values.namespace | quote }}
 data:
+  cluster_admin_bindings_test: |
+    test_cluster_admin_bindings() {
+
+      sa_with_cluster_admin=`kubectl get clusterrolebindings -o wide | grep "cluster-admin" | awk '{ print $5 }' | grep "[[:alnum:]]" | sed 's/^/"/' | sed 's/$/"/'`
+      trimmed=`echo "${sa_with_cluster_admin}" | tr -d '[[:space:]]'`
+      if [ ! -z "${trimmed}" ]; then
+        count=`echo ${sa_with_cluster_admin} | wc -l`
+        assertEquals " there must be no service accounts with cluster admin rights, found ${count}: [ ${sa_with_cluster_admin} ]; " 0 ${count}
+      fi
+    }
+
+    suite_addTest test_cluster_admin_bindings
+  escalation_test: |
+    test_escalation() {
+      for namespace in ${USER_NAMESPACES}; do
+        for pod in `kubectl get po -n ${namespace} --no-headers 2>/dev/null | cut -d' ' -f1`; do
+          count=`kubectl get po -n ${namespace} -o json | jq '.items[].spec.containers[] | select(.securityContext != "{}" and .securityContext != null and .securityContext.allowPrivilegeEscalation == true)' | wc -l`
+          assertEquals " pod ${pod} in namespace ${namespace} allows privilege escalation;" 0 ${count}
+        done
+      done
+    }
+    suite_addTest test_escalation
+  exports: |
+    if [ -z "${USER_NAMESPACES}" ]; then
+      export USER_NAMESPACES=`kubectl get ns 2>/dev/null | grep -v "\(kube-public\|kube-system\)" | cut -d' ' -f1 | tail -n +2`
+    fi
+
+    if [ -z "${NODES}" ]; then
+      export NODES=`kubectl get nodes 2>/dev/null| cut -d' ' -f1 | tail -n +2`
+    fi
+
+    if [ -z "${HA_SERVICES}" ]; then
+      export HA_SERVICES="kubernetes kube-dns"
+    fi
+  ha_test: |
+    test_high_availability() {
+      for svc in ${HA_SERVICES}; do
+        nodes=`kubectl get po --all-namespaces -o wide | grep ${svc} | \
+          awk '{ print $8 }'`
+        zones=""
+        for node in ${nodes}; do
+          zones="${zones} `kubectl get node/${node} -L "failure-domain.beta.kubernetes.io/zone" | \
+            awk '{print $6}' | \
+            tail -n +2`"
+        done
+        zone_count=`echo ${zones} | tr ' ' '\n' | sort -u | wc -l`
+        ha=false
+        if [ "${zone_count}" -gt "1" ]; then
+          ha=true
+        fi
+        assertTrue \
+          " ${svc} must be distributed across two or more zones;" \
+          ${ha}
+      done
+    }
+    suite_addTest test_high_availability
+  healthcheck_test: |
+    test_healthcheck() {
+      for namespace in ${USER_NAMESPACES}; do
+        for pod in `kubectl get po --no-headers -n ${namespace} 2>/dev/null | cut -d' ' -f1`; do
+          result=`kubectl get po/${pod} -n ${namespace} -o json | jq '.spec.containers[] | select(.readinessProbe and .livenessProbe)'`
+          assertNotEquals " pod ${pod} in namespace ${namespace} requires both liveness and readiness probes;" 0 ${#result}
+        done
+      done
+    }
+
+    suite_addTest test_healthcheck
   identity_test: |
     test_identity() {
       assertEquals " expected identity;" 0 0
     }
     suite_addTest test_identity
+  ignore: |
+    identity_test
+  nodes_test: |
+    test_nodes_ready() {
+      for node in ${NODES}; do
+        ready=`kubectl get node ${node} -o json 2>/dev/null | jq -r '.status.conditions[] | select(.type=="Ready") | .status' 2>/dev/null`
+        assertEquals " node ${node} not ready;" "True" ${ready}
+      done
+    }
+    test_nodes_no_warnings() {
+      for node in ${NODES}; do
+        warnings=`kubectl describe node/${node} 2>/dev/null | grep -A64 "^Events:" | grep -c "Warn"`
+        assertEquals " node ${node} has warnings;" 0 ${warnings}
+      done
+    }
+    suite_addTest test_nodes_ready
+    suite_addTest test_nodes_no_warnings
+  privileged_test: |
+    test_security_context_privileged() {
+      for namespace in ${USER_NAMESPACES}; do
+        for pod in `kubectl get po -n ${namespace} 2>/dev/null | cut -d' ' -f1 | tail -n +2`; do
+          count_privileged=`kubectl get po/${pod} -n ${namespace} -o json 2>/dev/null | jq -r '..|.securityContext?.privileged' | grep -c true`
+          assertEquals " pod ${pod} in namespace ${namespace} runs with privileged security context;" 0 ${count_privileged}
+        done
+      done
+    }
+    suite_addTest test_security_context_privileged
+  quotas_test: |
+    test_quotas() {
+      for namespace in ${USER_NAMESPACES}; do
+        resourcequota=`kubectl get resourcequota -n ${namespace} 2>/dev/null | wc -l`
+        assertNotEquals " resourcequota not set in namespace ${namespace};" 0 ${resourcequota}
+      done
+    }
+    suite_addTest test_quotas
+  resources_test: |
+    test_container_resources() {
+      for namespace in ${USER_NAMESPACES}; do
+        for deployment in `kubectl get deployments -n ${namespace} -o json | jq -r '.items[].metadata.name'`; do
+          resources_count=`kubectl get deployment/${deployment} -n ${namespace} -o json | jq -r '.spec.template.spec.containers[].resources' | grep -c "\(cpu\|memory\)"`
+          assertNotEquals " no resource limits/requests set for deployment ${deployment} in namespace ${namespace};" 0 ${resources_count}
+        done
+      done
+    }
+    suite_addTest test_container_resources
+  root_test: |
+    test_root() {
+      for namespace in ${USER_NAMESPACES}; do
+        for pod in `kubectl get po -n ${namespace} --no-headers 2>/dev/null | cut -d' ' -f1`; do
+          count=`kubectl get po -n ${namespace} -o json | jq '.items[].spec | select(.securityContext != "{}" and .securityContext.runAsUser == 0)' | wc -l`
+          assertEquals " pod ${pod} in namespace ${namespace} runs as root;" 0 ${count}
+        done
+      done
+    }
+    suite_addTest test_root
