@@ -1,8 +1,8 @@
 test_container_resources() {
   for namespace in ${USER_NAMESPACES}; do
     for deployment in `kubectl get deployments -n ${namespace} -o json | jq -r '.items[].metadata.name'`; do
-      resources_count=`kubectl get deployment/${deployment} -n ${namespace} -o json | jq -r '.spec.template.spec.containers[].resources' | grep -c "\(cpu\|memory\)"`
-      assertNotEquals " no resource limits/requests set for deployment ${deployment} in namespace ${namespace};" 0 ${resources_count}
+      resources_count=`kubectl get deployment/${deployment} -n ${namespace} -o json | jq -r '.spec.template.spec.containers[].resources | select(.limits.cpu and .limits.memory and .requests.cpu and .requests.memory)' | grep -c "[[:alnum:]]"`
+      assertNotEquals " missing resrource limits/requests in deployment ${deployment} in namespace ${namespace};" 0 ${resources_count}
     done
   done
 }

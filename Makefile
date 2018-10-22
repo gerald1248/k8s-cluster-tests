@@ -11,7 +11,8 @@ NAMESPACE = $(shell jq -r .namespace values.yaml)
 build:
 	docker build -t $(NAME) .
 update:
-	kubectl create configmap $(NAME) --from-file=test/ -o yaml
+	kubectl delete configmap $(NAME) --ignore-not-found -n $(NAMESPACE)
+	kubectl create configmap $(NAME) -n $(NAMESPACE) --from-file=test/
 push:
 	docker tag $(NAME) gerald1248/$(NAME):latest
 	docker push gerald1248/$(NAME):latest
